@@ -49,4 +49,15 @@ class User extends ApiResource
     {
         return $this->request('GET', $this->getEndpoint() . '/me/payment-methods');
     }
+
+    /**
+     * @return array
+     *
+     * @throws OlxException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function getPackets()
+    {
+        return $this->request('GET', $this->getEndpoint() . '/me/packets');
+    }
 }

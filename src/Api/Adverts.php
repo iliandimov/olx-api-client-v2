@@ -36,6 +36,28 @@ class Adverts extends ApiResource
     }
 
     /**
+     * @return array|mixed|null
+     *
+     * @throws OlxException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function getPaidFeatures()
+    {
+        return $this->request('GET', 'partner/paid-features', []);
+    }
+
+    /**
+     * @return array|mixed|null
+     *
+     * @throws OlxException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function getActivePaidFeatures($advert_id)
+    {
+        return $this->request('GET', "partner/adverts/{$advert_id}/paid-features", []);
+    }
+
+    /**
      * @param array $advert
      *
      * @return array
@@ -46,6 +68,20 @@ class Adverts extends ApiResource
     public function create(array $advert)
     {
         return $this->request('POST', $this->getEndpoint(), $advert);
+    }
+
+    /**
+     * @param array $advert_id
+     * @param array $payload
+     *
+     * @return array
+     *
+     * @throws OlxException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function purchasePaidFature(int $advert_id, $payload)
+    {
+        return $this->request('POST', sprintf("partner/adverts/%d/paid-features", $advert_id), $payload);
     }
 
     /**

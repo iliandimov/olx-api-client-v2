@@ -49,4 +49,13 @@ class Cities extends ApiResource
 
         return $response['data'];
     }
+
+    public function getDistricts()
+    {
+        $response = $this->client->request('GET', sprintf('partner/districts', $this->getEndpoint()));
+
+        return $response['data'];
+    }
 }
+
+

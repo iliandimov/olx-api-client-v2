@@ -86,6 +86,16 @@ class Client
     protected $user;
 
     /**
+     * @var last_response
+     */
+    protected $last_response = null;
+
+    /**
+     * @var last_request
+     */
+    protected $last_request = null;
+
+    /**
      * @param Credentials $credentials
      * @param string $countryCode
      *
@@ -107,10 +117,12 @@ class Client
         ]);
 
         $this->cities = new Cities($this);
+        $this->regions = new Regions($this);
         $this->categories = new Categories($this);
         $this->adverts = new Adverts($this);
         $this->threads = new Threads($this);
         $this->user = new User($this);
+        $this->packets = new Packets($this);
     }
 
     /**
@@ -143,6 +155,14 @@ class Client
     }
 
     /**
+     * @return Regions
+     */
+    public function regions()
+    {
+        return $this->regions;
+    }
+
+    /**
      * @return User
      */
     public function user()
@@ -172,6 +192,14 @@ class Client
     public function threads()
     {
         return $this->threads;
+    }
+
+    /**
+     * @return Threads
+     */
+    public function packets()
+    {
+        return $this->packets;
     }
 
     /**
@@ -234,7 +262,7 @@ class Client
      *
      * @return \Psr\Http\Message\ResponseInterface
      */
-    protected function refreshAccountToken(string $refreshToken)
+    public function refreshAccountToken(string $refreshToken)
     {
         return $this->client->post('open/oauth/token',
             [
@@ -263,6 +291,38 @@ class Client
                 ]
             ]
         );
+    }
+
+    /**
+     * @param $data
+     */
+    private function setLastRequest($data)
+    {
+        $this->last_request = $data;
+    }
+    
+    /**
+     * @param $data
+     */
+    private function setLastResponse($data)
+    {
+        $this->last_response = $data;
+    }
+
+    /**
+     * @return last_request|null
+     */
+    public function getLastRequest()
+    {
+        return $this->last_request;
+    }
+
+    /**
+     * @return last_response|null
+     */
+    public function getLastResponse()
+    {
+        return $this->last_response;
     }
 
     /**
@@ -353,6 +413,8 @@ class Client
         }
 
         try {
+            $this->setLastRequest($data);
+
             $response = $this->client->request($method, $endpoint, $options);
         } catch (ClientException $e) {
             $this->handleException($e);
@@ -368,11 +430,12 @@ class Client
      *
      * @return mixed
      */
-    private function handleResponse(Response $response)
+    public function handleResponse(Response $response)
     {
         $stream = stream_for($response->getBody());
         $data = json_decode($stream, true, 512, JSON_UNESCAPED_UNICODE);
 
+        $this->setLastResponse($data);
         return $data;
     }
 
@@ -380,6 +443,7 @@ class Client
      * @param ClientException $e
      *
      * @throws OlxException
+     * @returns response OlxException
      */
     private function handleException(ClientException $e)
     {
@@ -393,6 +457,9 @@ class Client
             $message = $details['error_description'];
         }
 
+        $this->setLastRequest(json_decode(stream_for($e->getRequest()->getBody()), true, 512, JSON_UNESCAPED_UNICODE));
+        $this->setLastResponse($details);
+//        return $details;
         throw new OlxException($message ?? $e->getMessage(), $e->getCode(), $details);
     }
 }
